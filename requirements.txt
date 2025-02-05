@@ -1,4 +1,5 @@
 matplotlib
 geneticalgorithm
 joblib
-sklearn
+scikit-learn
+
