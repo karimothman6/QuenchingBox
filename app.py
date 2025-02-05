@@ -20,13 +20,13 @@ model_path = resource_path("Random Forest_pipeline.joblib")
 st.set_page_config(
         page_title="Quenching Box",
         page_icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSDdvw54ABycnSpE-o_dWtBKsJGGqtPLwi0w&s"
-)
+)   
 
 
 # Load the entire pipeline (including scaler)
 @st.cache_resource
 def load_pipeline():
-    return joblib.load('Random Forest_pipeline.joblib')
+    return joblib.load('Random Forest 25_pipeline.joblib')
 
 pipeline = load_pipeline()
 
@@ -86,7 +86,7 @@ if st.button("Run Optimization"):
         penalty_yield = max(sy_min - S_y, 0) + max(S_y - sy_max, 0)
         penalty_ratio = abs((S_u / S_y) - target_ratio)
         
-        return (penalty_yield +10*penalty_ratio)
+        return (penalty_yield +10*penalty_ratio+100*X[2])
 
     # Configure and run GA (12 dimensions now)
     ga_model = ga(
@@ -95,7 +95,7 @@ if st.button("Run Optimization"):
         variable_type_mixed=np.array(['real']*12),
         variable_boundaries=varbound,
         algorithm_parameters={
-            'max_num_iteration': 200,
+            'max_num_iteration': 100,
             'population_size': 50,
             'mutation_probability': 0.1,
             'elit_ratio': 0.01,
