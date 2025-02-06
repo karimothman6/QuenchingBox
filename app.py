@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image
 
 st.set_page_config(
+    initial_sidebar_state="collapsed",
     page_title="Quenching Box",
     page_icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSDdvw54ABycnSpE-o_dWtBKsJGGqtPLwi0w&s"
 )
