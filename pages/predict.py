@@ -16,7 +16,7 @@ def resource_path(relative_path):
 # Load the trained model pipeline
 @st.cache_resource
 def load_pipeline():
-    return joblib.load(resource_path("Random Forest_pipeline.joblib"))
+    return joblib.load(resource_path("Random Forest 25_pipeline.joblib"))
 
 pipeline = load_pipeline()
 
