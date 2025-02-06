@@ -43,12 +43,12 @@ def predict():
         st.session_state.current_page = "home"
         
     def resource_path(relative_path):
-    """Get absolute path to resources, works for dev and PyInstaller"""
-    try:
-        base_path = sys._MEIPASS  # PyInstaller creates a temp folder
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+        """Get absolute path to resources, works for dev and PyInstaller"""
+        try:
+            base_path = sys._MEIPASS  # PyInstaller creates a temp folder
+        except Exception:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
 
     @st.cache_resource
     def load_pipeline():
@@ -167,12 +167,12 @@ def optimize():
         st.session_state.current_page = "home"
     
     def resource_path(relative_path):
-    """Get absolute path to resources, works for dev and PyInstaller"""
-    try:
-        base_path = sys._MEIPASS  # PyInstaller creates a temp folder
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+        """Get absolute path to resources, works for dev and PyInstaller"""
+        try:
+            base_path = sys._MEIPASS  # PyInstaller creates a temp folder
+        except Exception:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
 
     @st.cache_resource
     def load_pipeline():
