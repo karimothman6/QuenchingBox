@@ -29,7 +29,7 @@ st.set_page_config(
 if st.button("Home"):
     st.switch_page("app.py")
 
-st.title("Yield Strength Predictor")
+st.title("Strength Predictor")
 st.write("Enter chemical composition parameters:")
 
 c = st.number_input("Carbon (C)", 0.2, 0.32, 0.25, step=0.01)
