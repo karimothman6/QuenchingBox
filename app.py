@@ -7,63 +7,50 @@ import os
 import sys
 from PIL import Image
 
-# Set page config to collapse sidebar by default
-st.set_page_config(initial_sidebar_state="collapsed")
+# Set page config once as the very first Streamlit command.
+st.set_page_config(
+    initial_sidebar_state="collapsed",
+    page_title="Quenching Box",
+    page_icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSDdvw54ABycnSpE-o_dWtBKsJGGqtPLwi0w&s"
+)
 
-# Define page functions
+# ----- Page Functions -----
 def home_page():
-    
-    st.set_page_config(
-        page_title="Quenching Box",
-        page_icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSDdvw54ABycnSpE-o_dWtBKsJGGqtPLwi0w&s"
-    )
-    
-    # Title and Logo
+    # Main page: Title, logo, and navigation buttons.
     st.title("Quenching Box - Main Page")
     st.image("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVe1HRt5eIRvbsvsnGjlKVqJTIJbLQbBWgSErE-AkE5JZeAIAjMoq87bteilcF-rLyRM8uFv4kj9Cc18a_OxnnJnxKScepazpcLnc_p3RHdKUtBxXMY74AQ31XjYDBBJzCd4aGpEeNjTeY/s640/logo-2.png")
-    
     st.write("Welcome to the Quenching Box Application. Select an option to proceed.")
+    
     col1, col2 = st.columns(2)
-
     with col1:
         if st.button("Optimize Chemical Composition"):
             st.session_state.current_page = "optimize"
-    
     with col2:
         if st.button("Predict Strength"):
             st.session_state.current_page = "predict"
 
-
 def predict():
-    st.title("Page 1")
-    st.write("Content for Page 1")
+    st.title("Chemical Composition Optimizer")
+    st.image("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVe1HRt5eIRvbsvsnGjlKVqJTIJbLQbBWgSErE-AkE5JZeAIAjMoq87bteilcF-rLyRM8uFv4kj9Cc18a_OxnnJnxKScepazpcLnc_p3RHdKUtBxXMY74AQ31XjYDBBJzCd4aGpEeNjTeY/s640/logo-2.png")
     
-    # Home button
+    # Button to return home
     if st.button("Home", key="home1"):
         st.session_state.current_page = "home"
-        
+    
+    # Helper function for resource paths (for PyInstaller compatibility)
     def resource_path(relative_path):
-        """Get absolute path to resources, works for dev and PyInstaller"""
         try:
-            base_path = sys._MEIPASS  # PyInstaller creates a temp folder
+            base_path = sys._MEIPASS  # For PyInstaller
         except Exception:
             base_path = os.path.abspath(".")
         return os.path.join(base_path, relative_path)
 
+    # Load the prediction pipeline (cached for efficiency)
     @st.cache_resource
     def load_pipeline():
         return joblib.load(resource_path("Random Forest 25_pipeline.joblib"))
     
     pipeline = load_pipeline()
-    
-    st.set_page_config(
-        page_title="Optimize Chemical Composition",
-        page_icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSDdvw54ABycnSpE-o_dWtBKsJGGqtPLwi0w&s"
-    )
-    
-    
-    st.title("Chemical Composition Optimizer")
-    st.image("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVe1HRt5eIRvbsvsnGjlKVqJTIJbLQbBWgSErE-AkE5JZeAIAjMoq87bteilcF-rLyRM8uFv4kj9Cc18a_OxnnJnxKScepazpcLnc_p3RHdKUtBxXMY74AQ31XjYDBBJzCd4aGpEeNjTeY/s640/logo-2.png")
     
     st.write("Enter chemical composition ranges and target objectives below:")
     
@@ -108,8 +95,10 @@ def predict():
             S_y, S_u = pipeline.predict(input_data)[0]
             penalty_yield = max(sy_min - S_y, 0) + max(S_y - sy_max, 0)
             penalty_ratio = abs((S_u / S_y) - target_ratio)
-            return penalty_yield + 10 * penalty_ratio + 100 * X[2]  # Example penalty formulation
+            # Example penalty formulation (adjust as needed)
+            return penalty_yield + 10 * penalty_ratio + 100 * X[2]
     
+        # Set up and run the genetic algorithm
         ga_model = ga(
             function=fitness_function,
             dimension=12,
@@ -161,33 +150,22 @@ def predict():
             st.metric("S_u/S_y Ratio", f"{ratio_pred:.2f}")
 
 def optimize():
-    
-    # Home button
+    # Button to return home
     if st.button("Home", key="home2"):
         st.session_state.current_page = "home"
     
     def resource_path(relative_path):
-        """Get absolute path to resources, works for dev and PyInstaller"""
         try:
-            base_path = sys._MEIPASS  # PyInstaller creates a temp folder
+            base_path = sys._MEIPASS  # For PyInstaller
         except Exception:
             base_path = os.path.abspath(".")
         return os.path.join(base_path, relative_path)
-
+    
     @st.cache_resource
     def load_pipeline():
         return joblib.load(resource_path("Random Forest 25_pipeline.joblib"))
     
     pipeline = load_pipeline()
-    
-    st.set_page_config(
-        page_title="Optimize Chemical Composition",
-        page_icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSDdvw54ABycnSpE-o_dWtBKsJGGqtPLwi0w&s"
-    )
-    
-    # Home Button to return to the main page
-    if st.button("Home"):
-        st.switch_page("app.py")
     
     st.title("Chemical Composition Optimizer")
     st.image("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVe1HRt5eIRvbsvsnGjlKVqJTIJbLQbBWgSErE-AkE5JZeAIAjMoq87bteilcF-rLyRM8uFv4kj9Cc18a_OxnnJnxKScepazpcLnc_p3RHdKUtBxXMY74AQ31XjYDBBJzCd4aGpEeNjTeY/s640/logo-2.png")
@@ -216,15 +194,13 @@ def optimize():
         target_ratio = st.slider("Target S_u/S_y Ratio", 1.0, 1.5, 1.25)
     
     if st.button("Run Optimization"):
-        # Define variable boundaries (12 parameters)
         varbound = np.array([
             [c_min, c_max], [si_min, si_max], [mn_min, mn_max],
             [p_min, p_max], [s_min, s_max], [ni_min, ni_max],
             [cr_min, cr_max], [mo_min, mo_max], [cu_min, cu_max],
             [v_min, v_max], [n_min, n_max], [ce_min, ce_max]
         ])
-    
-        # Fitness function definition
+        
         def fitness_function(X):
             features = {
                 'C': X[0], 'Si': X[1], 'Mn': X[2], 'P': X[3], 'S': X[4],
@@ -235,8 +211,8 @@ def optimize():
             S_y, S_u = pipeline.predict(input_data)[0]
             penalty_yield = max(sy_min - S_y, 0) + max(S_y - sy_max, 0)
             penalty_ratio = abs((S_u / S_y) - target_ratio)
-            return penalty_yield + 10 * penalty_ratio + 100 * X[2]  # Example penalty formulation
-    
+            return penalty_yield + 10 * penalty_ratio + 100 * X[2]
+        
         ga_model = ga(
             function=fitness_function,
             dimension=12,
@@ -253,13 +229,13 @@ def optimize():
                 'max_iteration_without_improv': None
             }
         )
-    
+        
         with st.spinner("Optimizing..."):
             ga_model.run()
-    
+        
         solution = ga_model.output_dict
         best_params = solution['variable']
-    
+        
         st.success("Optimization Complete!")
         st.subheader("Optimal Parameters:")
         params = ['C', 'Si', 'Mn', 'P', 'S', 'Ni', 'Cr', 'Mo', 'Cu', 'V', 'N', 'CE% ']
@@ -272,13 +248,13 @@ def optimize():
             hide_index=True,
             use_container_width=True
         )
-    
+        
         input_dict = {param: value for param, value in zip(params, best_params)}
         input_dict['do'] = do_value
         input_data = pd.DataFrame([input_dict])
         S_y_pred, S_u_pred = pipeline.predict(input_data)[0]
         ratio_pred = S_u_pred / S_y_pred
-    
+        
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Yield Strength (S_y)", f"{S_y_pred:.2f} MPa")
@@ -286,12 +262,11 @@ def optimize():
             st.metric("Ultimate Strength (S_u)", f"{S_u_pred:.2f} MPa")
         with col3:
             st.metric("S_u/S_y Ratio", f"{ratio_pred:.2f}")
-    
-# Initialize session state for page navigation
+
+# ----- Session State and Page Routing -----
 if "current_page" not in st.session_state:
     st.session_state.current_page = "home"
 
-# Page routing
 if st.session_state.current_page == "home":
     home_page()
 elif st.session_state.current_page == "predict":
