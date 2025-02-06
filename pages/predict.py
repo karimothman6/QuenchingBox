@@ -9,11 +9,10 @@ def resource_path(relative_path):
     """Get absolute path to resources, works for dev and PyInstaller"""
     try:
         base_path = sys._MEIPASS  # PyInstaller creates a temp folder
-    except AttributeError:
+    except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-# Load the trained model pipeline
 @st.cache_resource
 def load_pipeline():
     return joblib.load(resource_path("Random Forest 25_pipeline.joblib"))
@@ -21,18 +20,17 @@ def load_pipeline():
 pipeline = load_pipeline()
 
 st.set_page_config(
-    page_title="Strength Predictor",
+    page_title="Predict Yield Strength",
     page_icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSDdvw54ABycnSpE-o_dWtBKsJGGqtPLwi0w&s"
 )
 
-st.title("Strength Predictor")
+# Home Button to return to the main page
+if st.button("Home"):
+    st.switch_page("app.py")
 
-# Add under the title
-st.image("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVe1HRt5eIRvbsvsnGjlKVqJTIJbLQbBWgSErE-AkE5JZeAIAjMoq87bteilcF-rLyRM8uFv4kj9Cc18a_OxnnJnxKScepazpcLnc_p3RHdKUtBxXMY74AQ31XjYDBBJzCd4aGpEeNjTeY/s640/logo-2.png")
+st.title("Yield Strength Predictor")
+st.write("Enter chemical composition parameters:")
 
-st.subheader("Enter Chemical Composition and Parameters")
-
-# Input fields for chemical composition
 c = st.number_input("Carbon (C)", 0.2, 0.32, 0.25, step=0.01)
 si = st.number_input("Silicon (Si)", 0.14, 0.55, 0.3, step=0.01)
 mn = st.number_input("Manganese (Mn)", 0.6, 1.8, 1.2, step=0.1)
@@ -47,9 +45,8 @@ n = st.number_input("Nitrogen (N)", 0.0056, 0.014, 0.01, step=0.001)
 ce = st.number_input("CE%", 0.35, 0.61, 0.5, step=0.01)
 do_value = st.selectbox("Select 'do' value", [10, 12, 16, 18, 22, 25, 32])
 
-# Predict yield strength
 if st.button("Predict Yield Strength"):
-    input_data = pd.DataFrame([{ 
+    input_data = pd.DataFrame([{
         'C': c, 'Si': si, 'Mn': mn, 'P': p, 'S': s,
         'Ni': ni, 'Cr': cr, 'Mo': mo, 'Cu': cu, 'V': v,
         'N': n, 'CE% ': ce, 'do': do_value
