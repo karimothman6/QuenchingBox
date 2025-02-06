@@ -10,35 +10,31 @@ def resource_path(relative_path):
     """Get absolute path to resources, works for dev and PyInstaller"""
     try:
         base_path = sys._MEIPASS  # PyInstaller creates a temp folder
-    except AttributeError:
+    except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-# Load your model using the correct path
-model_path = resource_path("Random Forest_pipeline.joblib")
-
-st.set_page_config(
-        page_title="Quenching Box",
-        page_icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSDdvw54ABycnSpE-o_dWtBKsJGGqtPLwi0w&s"
-)   
-
-
-# Load the entire pipeline (including scaler)
 @st.cache_resource
 def load_pipeline():
-    return joblib.load('Random Forest 25_pipeline.joblib')
+    return joblib.load(resource_path("Random Forest 25_pipeline.joblib"))
 
 pipeline = load_pipeline()
 
+st.set_page_config(
+    page_title="Optimize Chemical Composition",
+    page_icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSDdvw54ABycnSpE-o_dWtBKsJGGqtPLwi0w&s"
+)
+
+# Home Button to return to the main page
+if st.button("Home"):
+    st.switch_page("app.py")
+
 st.title("Chemical Composition Optimizer")
+st.image("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVe1HRt5eIRvbsvsnGjlKVqJTIJbLQbBWgSErE-AkE5JZeAIAjMoq87bteilcF-rLyRM8uFv4kj9Cc18a_OxnnJnxKScepazpcLnc_p3RHdKUtBxXMY74AQ31XjYDBBJzCd4aGpEeNjTeY/s640/logo-2.png")
 
-# Add under the title
-st.image("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVe1HRt5eIRvbsvsnGjlKVqJTIJbLQbBWgSErE-AkE5JZeAIAjMoq87bteilcF-rLyRM8uFv4kj9Cc18a_OxnnJnxKScepazpcLnc_p3RHdKUtBxXMY74AQ31XjYDBBJzCd4aGpEeNjTeY/s640/logo-2.png", )
+st.write("Enter chemical composition ranges and target objectives below:")
 
-# Create input widgets in the sidebar
-# Wrap the sidebar sections in expanders
-with st.sidebar.expander("🧪 CHEMICAL COMPOSITION", expanded=True):
-    # Variable Ranges
+with st.expander("🧪 CHEMICAL COMPOSITION", expanded=True):
     st.subheader("Chemical Composition Ranges")
     c_min, c_max = st.slider("Carbon (C)", 0.2, 0.32, (0.2, 0.32))
     si_min, si_max = st.slider("Silicon (Si)", 0.14, 0.55, (0.14, 0.55))
@@ -52,18 +48,15 @@ with st.sidebar.expander("🧪 CHEMICAL COMPOSITION", expanded=True):
     v_min, v_max = st.slider("Vanadium (V)", 0.00024, 0.013, (0.00024, 0.013))
     n_min, n_max = st.slider("Nitrogen (N)", 0.0056, 0.014, (0.0056, 0.014))
     ce_min, ce_max = st.slider("CE%", 0.35, 0.61, (0.35, 0.61))
-    
-    # Discrete 'do' value (single selection)
-    do_value = st.selectbox("Select 'do' value", [ 10, 12, 16, 18, 22, 25, 32])
-    
-with st.sidebar.expander("🎯 TARGET OBJECTIVES", expanded=True):
+    do_value = st.selectbox("Select 'do' value", [10, 12, 16, 18, 22, 25, 32])
+
+with st.expander("🎯 TARGET OBJECTIVES", expanded=True):
     st.subheader("Target Objectives")
     sy_min, sy_max = st.slider("Yield Strength (MPa)", 400, 700, (500, 650))
     target_ratio = st.slider("Target S_u/S_y Ratio", 1.0, 1.5, 1.25)
 
-# Run optimization when button is clicked
 if st.button("Run Optimization"):
-    # Define variable boundaries (12 parameters now)
+    # Define variable boundaries (12 parameters)
     varbound = np.array([
         [c_min, c_max], [si_min, si_max], [mn_min, mn_max],
         [p_min, p_max], [s_min, s_max], [ni_min, ni_max],
@@ -71,28 +64,23 @@ if st.button("Run Optimization"):
         [v_min, v_max], [n_min, n_max], [ce_min, ce_max]
     ])
 
-    # Define fitness function with current parameters
+    # Fitness function definition
     def fitness_function(X):
         features = {
             'C': X[0], 'Si': X[1], 'Mn': X[2], 'P': X[3], 'S': X[4],
             'Ni': X[5], 'Cr': X[6], 'Mo': X[7], 'Cu': X[8], 'V': X[9],
-            'N': X[10], 'CE% ': X[11], 'do': do_value  # Use selected do directly
+            'N': X[10], 'CE% ': X[11], 'do': do_value
         }
-        
         input_data = pd.DataFrame([features])
-        S_y, S_u = pipeline.predict(input_data)[0]  # Fixed typo
-        
-        # Calculate penalties
+        S_y, S_u = pipeline.predict(input_data)[0]
         penalty_yield = max(sy_min - S_y, 0) + max(S_y - sy_max, 0)
         penalty_ratio = abs((S_u / S_y) - target_ratio)
-        
-        return (penalty_yield +10*penalty_ratio+100*X[2])
+        return penalty_yield + 10 * penalty_ratio + 100 * X[2]  # Example penalty formulation
 
-    # Configure and run GA (12 dimensions now)
     ga_model = ga(
         function=fitness_function,
         dimension=12,
-        variable_type_mixed=np.array(['real']*12),
+        variable_type_mixed=np.array(['real'] * 12),
         variable_boundaries=varbound,
         algorithm_parameters={
             'max_num_iteration': 100,
@@ -107,50 +95,34 @@ if st.button("Run Optimization"):
     )
 
     with st.spinner("Optimizing..."):
-        # Run the model
         ga_model.run()
 
-        
-    # Display results
     solution = ga_model.output_dict
-    best_params = solution['variable'].copy()
-    
+    best_params = solution['variable']
+
     st.success("Optimization Complete!")
     st.subheader("Optimal Parameters:")
-    
-    # Create results dataframe with 12 parameters + do
-    params = ['C', 'Si', 'Mn', 'P', 'S', 'Ni', 'Cr', 'Mo',
-             'Cu', 'V', 'N', 'CE% ']
+    params = ['C', 'Si', 'Mn', 'P', 'S', 'Ni', 'Cr', 'Mo', 'Cu', 'V', 'N', 'CE% ']
     params_df = pd.DataFrame({
         'Parameter': params + ['do'],
         'Value': list(best_params) + [do_value]
     })
+    st.dataframe(
+        params_df.style.format({'Value': '{:.4f}'}),
+        hide_index=True,
+        use_container_width=True
+    )
 
-    # Show predictions
     input_dict = {param: value for param, value in zip(params, best_params)}
     input_dict['do'] = do_value
     input_data = pd.DataFrame([input_dict])
-    
     S_y_pred, S_u_pred = pipeline.predict(input_data)[0]
     ratio_pred = S_u_pred / S_y_pred
-    
-    # Replace the dataframe display with
-    with st.container(border=True):
-        st.subheader("⚙️ Optimal Parameters")
-        # Use a styled dataframe
-        st.dataframe(
-            params_df.style.format({'Value': '{:.4f}'}),
-            hide_index=True,
-            use_container_width=True
-        )
 
-    # For predictions
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Yield Strength (S_y)", f"{S_y_pred:.2f} MPa", 
-                 delta_color="off")
+        st.metric("Yield Strength (S_y)", f"{S_y_pred:.2f} MPa")
     with col2:
-        st.metric("Ultimate Strength (S_u)", f"{S_u_pred:.2f} MPa",
-                 delta_color="off") 
+        st.metric("Ultimate Strength (S_u)", f"{S_u_pred:.2f} MPa")
     with col3:
         st.metric("S_u/S_y Ratio", f"{ratio_pred:.2f}")
