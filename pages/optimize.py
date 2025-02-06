@@ -21,6 +21,7 @@ def load_pipeline():
 pipeline = load_pipeline()
 
 st.set_page_config(
+    initial_sidebar_state="collapsed",
     page_title="Optimize Chemical Composition",
     page_icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSDdvw54ABycnSpE-o_dWtBKsJGGqtPLwi0w&s"
 )
